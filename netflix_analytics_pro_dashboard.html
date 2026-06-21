@@ -1,0 +1,363 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-sans);color:var(--color-text-primary);font-size:14px}
+.app{padding:1rem 0}
+.header{display:flex;align-items:center;gap:12px;margin-bottom:1.25rem}
+.logo{background:#E50914;color:#fff;font-weight:700;font-size:18px;padding:6px 14px;border-radius:6px;letter-spacing:1px}
+.header-info h1{font-size:17px;font-weight:600}
+.header-info p{font-size:12px;color:var(--color-text-secondary);margin-top:2px}
+.nav{display:flex;gap:8px;margin-bottom:1.25rem;flex-wrap:wrap}
+.nav-btn{padding:6px 14px;border-radius:20px;border:1px solid var(--color-border-secondary);background:transparent;color:var(--color-text-secondary);cursor:pointer;font-size:13px;transition:all .2s}
+.nav-btn.active{background:#E50914;color:#fff;border-color:#E50914}
+.section{display:none}
+.section.active{display:block}
+
+/* Metrics */
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:1.25rem}
+.mc{background:var(--color-background-secondary);border-radius:10px;padding:12px}
+.mc-label{font-size:11px;color:var(--color-text-secondary);margin-bottom:3px}
+.mc-value{font-size:22px;font-weight:600;color:var(--color-text-primary)}
+.mc-sub{font-size:11px;color:var(--color-text-tertiary);margin-top:1px}
+
+/* Charts grid */
+.charts-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+.chart-card{background:var(--color-background-primary);border:1px solid var(--color-border-tertiary);border-radius:12px;padding:14px}
+.chart-card.full{grid-column:1/-1}
+.chart-title{font-size:13px;font-weight:600;margin-bottom:10px;color:var(--color-text-primary)}
+.legend{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:8px;font-size:12px;color:var(--color-text-secondary)}
+.ld{width:10px;height:10px;border-radius:2px;display:inline-block;margin-right:4px}
+.tabs{display:flex;gap:6px;margin-bottom:10px}
+.tab{font-size:11px;padding:3px 10px;border-radius:12px;border:1px solid var(--color-border-secondary);cursor:pointer;background:transparent;color:var(--color-text-secondary)}
+.tab.active{background:rgba(229,9,20,0.12);color:#E50914;border-color:#E50914}
+
+/* Director/Actor */
+.top-list{display:flex;flex-direction:column;gap:8px}
+.top-item{display:flex;align-items:center;gap:10px}
+.top-rank{font-size:12px;color:var(--color-text-tertiary);width:20px;text-align:right;flex-shrink:0}
+.top-name{font-size:13px;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar-wrap{width:160px;flex-shrink:0}
+.bar-bg{height:8px;border-radius:4px;background:var(--color-background-tertiary);overflow:hidden}
+.bar-fill{height:100%;border-radius:4px;background:#E50914;transition:width .5s}
+.top-count{font-size:12px;color:var(--color-text-secondary);width:32px;text-align:right;flex-shrink:0}
+.da-tabs{display:flex;gap:8px;margin-bottom:14px}
+.da-tab{padding:5px 14px;border-radius:20px;border:1px solid var(--color-border-secondary);background:transparent;cursor:pointer;font-size:13px;color:var(--color-text-secondary)}
+.da-tab.active{background:#E50914;color:#fff;border-color:#E50914}
+
+/* CSV Upload */
+.upload-zone{border:2px dashed var(--color-border-secondary);border-radius:12px;padding:32px;text-align:center;cursor:pointer;margin-bottom:14px;transition:all .2s}
+.upload-zone:hover,.upload-zone.drag{border-color:#E50914;background:rgba(229,9,20,0.04)}
+.upload-icon{font-size:36px;margin-bottom:8px}
+.upload-title{font-size:15px;font-weight:600;margin-bottom:4px}
+.upload-sub{font-size:12px;color:var(--color-text-secondary)}
+#fileInput{display:none}
+.csv-results{display:none}
+.csv-stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+.csv-stat{background:var(--color-background-secondary);border-radius:8px;padding:10px;text-align:center}
+.csv-stat-val{font-size:20px;font-weight:600}
+.csv-stat-label{font-size:11px;color:var(--color-text-secondary);margin-top:2px}
+.info-box{background:var(--color-background-info);border:1px solid var(--color-border-info);border-radius:8px;padding:10px;font-size:12px;color:var(--color-text-info);margin-bottom:14px}
+
+/* AI Q&A */
+.chat-container{border:1px solid var(--color-border-tertiary);border-radius:12px;overflow:hidden}
+.chat-messages{height:320px;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;background:var(--color-background-primary)}
+.msg{max-width:80%;padding:10px 13px;border-radius:12px;font-size:13px;line-height:1.5}
+.msg.user{align-self:flex-end;background:#E50914;color:#fff;border-bottom-right-radius:3px}
+.msg.ai{align-self:flex-start;background:var(--color-background-secondary);color:var(--color-text-primary);border-bottom-left-radius:3px}
+.msg.loading{opacity:.6}
+.chat-input-area{display:flex;gap:8px;padding:10px;border-top:1px solid var(--color-border-tertiary);background:var(--color-background-secondary)}
+.chat-input{flex:1;padding:8px 12px;border-radius:8px;border:1px solid var(--color-border-secondary);background:var(--color-background-primary);color:var(--color-text-primary);font-size:13px;outline:none}
+.chat-input:focus{border-color:#E50914}
+.send-btn{padding:8px 16px;background:#E50914;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600}
+.send-btn:disabled{opacity:.5;cursor:not-allowed}
+.quick-qs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.quick-q{padding:5px 11px;background:var(--color-background-secondary);border:1px solid var(--color-border-secondary);border-radius:14px;cursor:pointer;font-size:12px;color:var(--color-text-secondary);transition:all .15s}
+.quick-q:hover{border-color:#E50914;color:#E50914}
+.error-msg{color:#E50914;font-size:12px;padding:6px 0}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <div class="logo">N</div>
+    <div class="header-info">
+      <h1>Netflix Analytics Pro</h1>
+      <p>8,807 titles · Directors · Actors · AI Q&A · CSV Upload</p>
+    </div>
+  </div>
+
+  <div class="nav">
+    <button class="nav-btn active" onclick="showSection('overview',this)">📊 Overview</button>
+    <button class="nav-btn" onclick="showSection('directors',this)">🎬 Directors & Actors</button>
+    <button class="nav-btn" onclick="showSection('upload',this)">📂 CSV Upload</button>
+    <button class="nav-btn" onclick="showSection('ai',this)">🤖 AI Q&A</button>
+  </div>
+
+  <!-- OVERVIEW -->
+  <div id="overview" class="section active">
+    <div class="metrics">
+      <div class="mc"><div class="mc-label">Total Titles</div><div class="mc-value">8,807</div><div class="mc-sub">Movies + TV Shows</div></div>
+      <div class="mc"><div class="mc-label">Movies</div><div class="mc-value">6,131</div><div class="mc-sub">69.6% of library</div></div>
+      <div class="mc"><div class="mc-label">TV Shows</div><div class="mc-value">2,676</div><div class="mc-sub">30.4% of library</div></div>
+      <div class="mc"><div class="mc-label">Countries</div><div class="mc-value">748</div><div class="mc-sub">Content nations</div></div>
+    </div>
+    <div class="charts-row">
+      <div class="chart-card">
+        <div class="chart-title">Movies vs TV Shows</div>
+        <div class="legend"><span><span class="ld" style="background:#E50914"></span>Movies 69.6%</span><span><span class="ld" style="background:#3266ad"></span>TV Shows 30.4%</span></div>
+        <div style="position:relative;height:200px"><canvas id="donut"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Content added per year</div>
+        <div class="legend"><span><span class="ld" style="background:#E50914"></span>Movies</span><span><span class="ld" style="background:#3266ad"></span>TV Shows</span></div>
+        <div style="position:relative;height:200px"><canvas id="yearLine"></canvas></div>
+      </div>
+    </div>
+    <div class="charts-row">
+      <div class="chart-card">
+        <div class="chart-title">Top 10 Countries</div>
+        <div style="position:relative;height:300px"><canvas id="countryBar"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Top Genres</div>
+        <div class="tabs">
+          <button class="tab active" onclick="switchGenre('all',this)">All</button>
+          <button class="tab" onclick="switchGenre('movies',this)">Movies</button>
+          <button class="tab" onclick="switchGenre('tv',this)">TV Shows</button>
+        </div>
+        <div style="position:relative;height:256px"><canvas id="genreBar"></canvas></div>
+      </div>
+    </div>
+    <div class="charts-row">
+      <div class="chart-card full">
+        <div class="chart-title">Content Rating Distribution</div>
+        <div style="position:relative;height:150px"><canvas id="ratingBar"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DIRECTORS & ACTORS -->
+  <div id="directors" class="section">
+    <div class="da-tabs">
+      <button class="da-tab active" onclick="switchDA('directors',this)">🎬 Top Directors</button>
+      <button class="da-tab" onclick="switchDA('actors',this)">🌟 Top Actors</button>
+    </div>
+    <div class="charts-row">
+      <div class="chart-card full" id="da-list-card">
+        <div class="chart-title" id="da-title">Top 15 Directors by number of Netflix titles</div>
+        <div class="top-list" id="da-list"></div>
+      </div>
+    </div>
+    <div class="charts-row">
+      <div class="chart-card full">
+        <div class="chart-title" id="da-chart-title">Directors — Bar Chart</div>
+        <div style="position:relative;height:360px"><canvas id="daChart"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CSV UPLOAD -->
+  <div id="upload" class="section">
+    <div class="info-box">💡 Apna Netflix-style CSV upload karo (columns: type, title, country, release_year, rating, listed_in). Ya demo data se try karo!</div>
+    <div class="upload-zone" id="dropZone" onclick="document.getElementById('fileInput').click()" ondragover="event.preventDefault();this.classList.add('drag')" ondragleave="this.classList.remove('drag')" ondrop="handleDrop(event)">
+      <div class="upload-icon">📂</div>
+      <div class="upload-title">CSV file yahan drop karo ya click karo</div>
+      <div class="upload-sub">Netflix dataset format support karta hai</div>
+    </div>
+    <input type="file" id="fileInput" accept=".csv" onchange="handleFile(this.files[0])">
+    <button onclick="loadDemoCSV()" style="padding:8px 18px;background:var(--color-background-secondary);border:1px solid var(--color-border-secondary);border-radius:8px;cursor:pointer;font-size:13px;margin-bottom:14px;color:var(--color-text-primary)">🔄 Demo data load karo</button>
+    <div class="csv-results" id="csvResults">
+      <div class="csv-stat-grid" id="csvStats"></div>
+      <div class="charts-row">
+        <div class="chart-card"><div class="chart-title">Type split</div><div style="position:relative;height:200px"><canvas id="csvDonut"></canvas></div></div>
+        <div class="chart-card"><div class="chart-title">Top Countries</div><div style="position:relative;height:200px"><canvas id="csvCountry"></canvas></div></div>
+      </div>
+      <div class="charts-row">
+        <div class="chart-card full"><div class="chart-title">Top Genres (your data)</div><div style="position:relative;height:200px"><canvas id="csvGenre"></canvas></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AI Q&A -->
+  <div id="ai" class="section">
+    <p style="font-size:13px;color:var(--color-text-secondary);margin-bottom:10px">Netflix dataset ke baare mein kuch bhi poochho — AI jawab dega!</p>
+    <div class="quick-qs">
+      <button class="quick-q" onclick="askQ(this.textContent)">USA mein kitne titles hain?</button>
+      <button class="quick-q" onclick="askQ(this.textContent)">Sabse popular genre kaun sa hai?</button>
+      <button class="quick-q" onclick="askQ(this.textContent)">India ka Netflix content kaisa hai?</button>
+      <button class="quick-q" onclick="askQ(this.textContent)">2019 mein kitne movies aaye?</button>
+      <button class="quick-q" onclick="askQ(this.textContent)">TV-MA rating ka matlab kya hai?</button>
+      <button class="quick-q" onclick="askQ(this.textContent)">Netflix ke liye best director kaun hai?</button>
+    </div>
+    <div class="chat-container">
+      <div class="chat-messages" id="chatMessages">
+        <div class="msg ai">Namaste! 🎬 Main Netflix dataset ka AI analyst hoon. Aap mujhse movies, TV shows, countries, genres, directors, ratings — kuch bhi poochh sakte ho!</div>
+      </div>
+      <div class="chat-input-area">
+        <input class="chat-input" id="chatInput" placeholder="Koi bhi sawaal poochho Netflix ke baare mein..." onkeydown="if(event.key==='Enter')sendMsg()">
+        <button class="send-btn" id="sendBtn" onclick="sendMsg()">Send ▶</button>
+      </div>
+    </div>
+    <div class="error-msg" id="errorMsg"></div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+// ─── DATA ──────────────────────────────────────────────
+const NETFLIX_CONTEXT = `
+You are a Netflix Data Analytics expert. Answer ONLY about this Netflix dataset (8,807 titles from 2008-2021).
+Key facts:
+- Total: 8807 titles (Movies: 6131 = 69.6%, TV Shows: 2676 = 30.4%)
+- Top countries: USA (2818), India (972), UK (419), Japan (245), South Korea (199), Canada (181), France (124), Spain (115), Mexico (110), Egypt (106)
+- Top genres: International Movies (2752), Dramas (2427), Comedies (1674), International TV Shows (1351), Documentaries (869), Action & Adventure (859)
+- Top directors: Rajiv Chilaka (19), Raúl Campos & Jan Suter (18), Marcus Raboy (16), Jay Karas (14), Cathy Garcia-Molina (13), Martin Scorsese (12), Jay Chapman (12)
+- Top actors: Anupam Kher (39), Shah Rukh Khan (35), Naseeruddin Shah (32), Mammootty (30), Akshay Kumar (28), Om Puri (27)
+- Ratings: TV-MA (3207), TV-14 (2160), TV-PG (863), R (799), PG-13 (490)
+- Year-wise peak: 2019 had most content added (Movies: 1426, TV: 587)
+- India is 2nd largest content producer after USA
+Answer in simple Hinglish (Hindi + English mix). Keep answers short and informative. Use emojis.
+`;
+
+const directorData = [
+  {name:'Rajiv Chilaka',count:19},{name:'Raúl Campos',count:18},{name:'Marcus Raboy',count:16},
+  {name:'Jay Karas',count:14},{name:'Cathy Garcia-Molina',count:13},{name:'Martin Scorsese',count:12},
+  {name:'Jay Chapman',count:12},{name:'Youssef Chahine',count:11},{name:'David Dhawan',count:11},
+  {name:'Steven Spielberg',count:10},{name:'Mike Flanagan',count:10},{name:'Rob Stone',count:9},
+  {name:'Anurag Kashyap',count:9},{name:'Ryan Polito',count:8},{name:'Ken Burns',count:8}
+];
+const actorData = [
+  {name:'Anupam Kher',count:39},{name:'Shah Rukh Khan',count:35},{name:'Naseeruddin Shah',count:32},
+  {name:'Mammootty',count:30},{name:'Akshay Kumar',count:28},{name:'Om Puri',count:27},
+  {name:'Mohanlal',count:26},{name:'Paresh Rawal',count:25},{name:'Amitabh Bachchan',count:24},
+  {name:'Kareena Kapoor',count:22},{name:'Tom Hanks',count:21},{name:'Salman Khan',count:20},
+  {name:'Irrfan Khan',count:19},{name:'Aamir Khan',count:18},{name:'Nicolas Cage',count:17}
+];
+const genreData = {
+  all:{labels:['Intl Movies','Dramas','Comedies','Intl TV','Docs','Action','TV Dramas','Thrillers','Kids','Romance'],data:[2752,2427,1674,1351,869,859,763,788,641,615]},
+  movies:{labels:['Intl Movies','Dramas','Comedies','Docs','Action','Thrillers','Romance','Horror','Kids','Indie'],data:[2100,1800,1300,750,700,650,580,450,400,370]},
+  tv:{labels:['Intl TV','TV Dramas','TV Comedies','Crime TV','Kids TV','Reality','Anime','Docuseries','Stand-Up','British'],data:[1100,720,580,470,420,390,340,310,250,200]}
+};
+let currentDA='directors', daChartInst=null, genreChartInst=null;
+let csvDonutInst=null,csvCountryInst=null,csvGenreInst=null;
+
+// ─── NAV ───────────────────────────────────────────────
+function showSection(id,btn){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+  if(id==='directors') renderDA();
+}
+
+// ─── OVERVIEW CHARTS ───────────────────────────────────
+new Chart(document.getElementById('donut'),{type:'doughnut',data:{labels:['Movies','TV Shows'],datasets:[{data:[6131,2676],backgroundColor:['#E50914','#3266ad'],borderWidth:0,hoverOffset:8}]},options:{responsive:true,maintainAspectRatio:false,cutout:'65%',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${c.label}: ${c.parsed.toLocaleString()}`}}}}});
+new Chart(document.getElementById('yearLine'),{type:'line',data:{labels:['2015','2016','2017','2018','2019','2020','2021'],datasets:[{label:'Movies',data:[82,232,552,1054,1426,1296,359],borderColor:'#E50914',backgroundColor:'rgba(229,9,20,0.08)',tension:0.4,fill:true,borderWidth:2,pointRadius:4},{label:'TV Shows',data:[55,92,218,390,587,586,210],borderColor:'#3266ad',backgroundColor:'rgba(50,102,173,0.08)',tension:0.4,fill:true,borderWidth:2,pointRadius:4,borderDash:[5,3]}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:'#888'}},y:{grid:{color:'rgba(128,128,128,0.1)'},ticks:{color:'#888'}}}}});
+new Chart(document.getElementById('countryBar'),{type:'bar',data:{labels:['USA','India','UK','Japan','S. Korea','Canada','France','Spain','Mexico','Egypt'],datasets:[{label:'Titles',data:[2818,972,419,245,199,181,124,115,110,106],backgroundColor:['#E50914','#c5080f','#ab070d','#91060b','#780508','#3266ad','#2c5a9a','#275187','#224874','#1d3f61'],borderWidth:0,borderRadius:4}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${c.parsed.x.toLocaleString()} titles`}}},scales:{x:{grid:{color:'rgba(128,128,128,0.1)'},ticks:{color:'#888'}},y:{grid:{display:false},ticks:{color:'#888',font:{size:11}}}}}});
+new Chart(document.getElementById('ratingBar'),{type:'bar',data:{labels:['TV-MA','TV-14','TV-PG','R','PG-13','TV-Y7','TV-Y','PG','NR','G'],datasets:[{data:[3207,2160,863,799,490,334,307,287,80,41],backgroundColor:['#E50914','#3266ad','#2ea86e','#d97706','#E50914','#3266ad','#2ea86e','#d97706','#7c5ac2','#73726c'],borderWidth:0,borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:'#888'}},y:{grid:{color:'rgba(128,128,128,0.1)'},ticks:{color:'#888'}}}}});
+
+function buildGenreChart(key){
+  if(genreChartInst) genreChartInst.destroy();
+  const d=genreData[key];
+  genreChartInst=new Chart(document.getElementById('genreBar'),{type:'bar',data:{labels:d.labels,datasets:[{data:d.data,backgroundColor:'#E50914',borderWidth:0,borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:'#888',font:{size:10},maxRotation:35}},y:{grid:{color:'rgba(128,128,128,0.1)'},ticks:{color:'#888'}}}}});
+}
+buildGenreChart('all');
+function switchGenre(k,btn){document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));btn.classList.add('active');buildGenreChart(k);}
+
+// ─── DIRECTORS & ACTORS ────────────────────────────────
+function renderDA(){
+  const data = currentDA==='directors' ? directorData : actorData;
+  const max = data[0].count;
+  document.getElementById('da-title').textContent = currentDA==='directors' ? 'Top 15 Directors by Netflix titles' : 'Top 15 Actors by Netflix appearances';
+  document.getElementById('da-chart-title').textContent = currentDA==='directors' ? 'Directors — Bar Chart' : 'Actors — Bar Chart';
+  const list = document.getElementById('da-list');
+  list.innerHTML = data.map((d,i)=>`<div class="top-item"><span class="top-rank">${i+1}</span><span class="top-name">${d.name}</span><div class="bar-wrap"><div class="bar-bg"><div class="bar-fill" style="width:${(d.count/max*100).toFixed(1)}%"></div></div></div><span class="top-count">${d.count}</span></div>`).join('');
+  if(daChartInst) daChartInst.destroy();
+  daChartInst=new Chart(document.getElementById('daChart'),{type:'bar',data:{labels:data.map(d=>d.name),datasets:[{label:'Titles',data:data.map(d=>d.count),backgroundColor:currentDA==='directors'?'#E50914':'#3266ad',borderWidth:0,borderRadius:4}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:'rgba(128,128,128,0.1)'},ticks:{color:'#888'}},y:{grid:{display:false},ticks:{color:'#888',font:{size:11}}}}}});
+}
+function switchDA(type,btn){document.querySelectorAll('.da-tab').forEach(t=>t.classList.remove('active'));btn.classList.add('active');currentDA=type;renderDA();}
+
+// ─── CSV UPLOAD ────────────────────────────────────────
+function handleDrop(e){e.preventDefault();document.getElementById('dropZone').classList.remove('drag');const f=e.dataTransfer.files[0];if(f&&f.name.endsWith('.csv'))handleFile(f);}
+function handleFile(file){
+  const reader=new FileReader();
+  reader.onload=e=>parseCSV(e.target.result);
+  reader.readAsText(file);
+}
+function loadDemoCSV(){
+  const demo=`type,title,country,release_year,rating,listed_in\nMovie,Film A,India,2020,TV-MA,Dramas\nTV Show,Show B,USA,2019,TV-14,Comedies\nMovie,Film C,India,2021,R,Action & Adventure\nTV Show,Show D,UK,2020,TV-PG,Dramas\nMovie,Film E,USA,2018,PG-13,International Movies\nMovie,Film F,India,2019,TV-MA,Dramas\nTV Show,Show G,Japan,2021,TV-14,Anime\nMovie,Film H,USA,2020,R,Thrillers\nMovie,Film I,India,2020,TV-MA,International Movies\nTV Show,Show J,USA,2019,TV-14,Crime TV Shows\nMovie,Film K,Canada,2021,PG,Documentaries\nTV Show,Show L,South Korea,2020,TV-MA,International TV Shows`;
+  parseCSV(demo);
+}
+function parseCSV(text){
+  const lines=text.trim().split('\n');
+  const headers=lines[0].split(',').map(h=>h.trim().replace(/"/g,''));
+  const rows=lines.slice(1).map(l=>{const vals=l.split(',');return Object.fromEntries(headers.map((h,i)=>[h,(vals[i]||'').trim().replace(/"/g,'')]));});
+  const movies=rows.filter(r=>r.type==='Movie').length;
+  const tvs=rows.filter(r=>r.type==='TV Show').length;
+  const countries={};rows.forEach(r=>{if(r.country)countries[r.country]=(countries[r.country]||0)+1;});
+  const genres={};rows.forEach(r=>{if(r.listed_in){r.listed_in.split(',').forEach(g=>{const gt=g.trim();genres[gt]=(genres[gt]||0)+1;});}});
+  const topC=Object.entries(countries).sort((a,b)=>b[1]-a[1]).slice(0,6);
+  const topG=Object.entries(genres).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  document.getElementById('csvStats').innerHTML=`<div class="csv-stat"><div class="csv-stat-val">${rows.length}</div><div class="csv-stat-label">Total Titles</div></div><div class="csv-stat"><div class="csv-stat-val">${movies}</div><div class="csv-stat-label">Movies</div></div><div class="csv-stat"><div class="csv-stat-val">${tvs}</div><div class="csv-stat-label">TV Shows</div></div>`;
+  document.getElementById('csvResults').style.display='block';
+  if(csvDonutInst)csvDonutInst.destroy();
+  csvDonutInst=new Chart(document.getElementById('csvDonut'),{type:'doughnut',data:{labels:['Movies','TV Shows'],datasets:[{data:[movies,tvs],backgroundColor:['#E50914','#3266ad'],borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,cutout:'60%',plugins:{legend:{position:'bottom',labels:{color:'#888',font:{size:11}}}}}});
+  if(csvCountryInst)csvCountryInst.destroy();
+  csvCountryInst=new Chart(document.getElementById('csvCountry'),{type:'bar',data:{labels:topC.map(c=>c[0]),datasets:[{data:topC.map(c=>c[1]),backgroundColor:'#E50914',borderWidth:0,borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:'#888',font:{size:10}}},y:{grid:{color:'rgba(128,128,128,0.1)'},ticks:{color:'#888'}}}}});
+  if(csvGenreInst)csvGenreInst.destroy();
+  csvGenreInst=new Chart(document.getElementById('csvGenre'),{type:'bar',data:{labels:topG.map(g=>g[0]),datasets:[{data:topG.map(g=>g[1]),backgroundColor:'#3266ad',borderWidth:0,borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:'#888',font:{size:10},maxRotation:35}},y:{grid:{color:'rgba(128,128,128,0.1)'},ticks:{color:'#888'}}}}});
+}
+
+// ─── AI Q&A ────────────────────────────────────────────
+const chatHistory=[];
+function appendMsg(text,role){
+  const div=document.createElement('div');
+  div.className=`msg ${role}`;
+  div.textContent=text;
+  const c=document.getElementById('chatMessages');
+  c.appendChild(div);
+  c.scrollTop=c.scrollHeight;
+  return div;
+}
+function askQ(q){document.getElementById('chatInput').value=q;sendMsg();}
+async function sendMsg(){
+  const input=document.getElementById('chatInput');
+  const btn=document.getElementById('sendBtn');
+  const q=input.value.trim();
+  if(!q)return;
+  document.getElementById('errorMsg').textContent='';
+  appendMsg(q,'user');
+  chatHistory.push({role:'user',content:q});
+  input.value='';
+  btn.disabled=true;
+  const loadDiv=appendMsg('Soch raha hoon...','ai loading');
+  try{
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-6',
+        max_tokens:1000,
+        system:NETFLIX_CONTEXT,
+        messages:chatHistory
+      })
+    });
+    const data=await resp.json();
+    if(!resp.ok)throw new Error(data.error?.message||'API error');
+    const reply=data.content.map(b=>b.text||'').join('');
+    loadDiv.remove();
+    appendMsg(reply,'ai');
+    chatHistory.push({role:'assistant',content:reply});
+  }catch(err){
+    loadDiv.remove();
+    document.getElementById('errorMsg').textContent='❌ Error: '+err.message;
+  }
+  btn.disabled=false;
+  input.focus();
+}
+</script>
+</body>
+</html>
